@@ -1,6 +1,6 @@
 import { Dropzone } from "@/components/dropzone";
 
-const Home = () => {
+const Home = async () => {
   return (
     <main className='flex min-h-dvh w-full flex-col items-center justify-center gap-y-4 bg-neutral-300 p-4'>
       <section className='flex max-w-2xl flex-col items-center gap-y-4'>
