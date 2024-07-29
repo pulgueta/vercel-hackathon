@@ -1,6 +1,5 @@
 {
-    "**/*.{ts,tsx,css}": [
-        "prettier --write",
-        "turbo run lint --"
+    "**/*.{ts,tsx,css,mjs}": [
+        "prettier --write"
     ]
 }
