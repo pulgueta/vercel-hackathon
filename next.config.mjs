@@ -4,6 +4,9 @@ const nextConfig = {
     fetches: {
       fullUrl: true
     }
+  },
+  experimental: {
+    serverComponentsExternalPackages: ["@node-rs/argon2"]
   }
 };
 

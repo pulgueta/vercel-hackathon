@@ -15,8 +15,8 @@ model Ad {
 }
 
 model Upload {
-  id        String   @id @default(cuid())
-  ip        String
+  id        String?  @default(cuid())
+  ip        String   @unique
   tries     Int
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt

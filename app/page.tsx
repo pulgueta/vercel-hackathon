@@ -1,4 +1,5 @@
 import { Dropzone } from "@/components/dropzone";
+import { Header } from "@/components/header";
 
 const Home = async () => {
   return (
@@ -7,6 +8,8 @@ const Home = async () => {
         <h1 className='text-balance text-3xl font-bold tracking-tighter'>
           Análisis de campaña influencer
         </h1>
+        <Header />
+
         <p className='text-pretty text-center text-sm'>
           Sube tu video y descubre el engagement de tu audiencia.
         </p>
