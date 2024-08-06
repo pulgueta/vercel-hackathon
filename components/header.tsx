@@ -1,27 +1,22 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useTries } from "@/hooks/use-tries";
+import { OpenAIInput } from "./openai-input";
 
 export const Header = () => {
-  const [tries, setTries] = useState<number>(0);
+  const openaiKey = localStorage.getItem("openaiKey");
 
-  useEffect(() => {
-    const getUserTries = async () => {
-      const response = await fetch("/api/upload");
-
-      const data = await response.json();
-
-      setTries(() => data.tries);
-    };
-
-    getUserTries();
-  }, []);
+  const { tries } = useTries();
 
   return (
-    <header>
-      <h2 className='text-balance text-xl font-bold tracking-tight'>
-        Has utilizado {tries} de tus 5 subidas gratuitas
-      </h2>
+    <header className='w-full max-w-xl'>
+      {!openaiKey || tries >= 3 ? (
+        <h2 className='text-balance text-center text-xl font-bold tracking-tight'>
+          Has utilizado {tries} de tus 3 subidas gratuitas
+        </h2>
+      ) : (
+        <OpenAIInput />
+      )}
     </header>
   );
 };

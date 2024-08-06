@@ -15,13 +15,15 @@ export const metadata: Metadata = {
     "Descubre el engagement de tu audiencia con nuestro analizador de campañas influencer."
 };
 
-export default function RootLayout({ children }: Readonly<PropsWithChildren>) {
+const RootLayout = ({ children }: Readonly<PropsWithChildren>) => {
   return (
     <html lang='es'>
       <body className={dm_sans.className}>
-        <Toaster richColors />
+        <Toaster richColors position='top-right' />
         {children}
       </body>
     </html>
   );
-}
+};
+
+export default RootLayout;

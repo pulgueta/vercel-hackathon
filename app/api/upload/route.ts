@@ -7,7 +7,12 @@ import { db } from "@/db";
 
 export const POST = async (req: NextRequest) => {
   const _body = await req.json();
+  const video = await req.formData();
   const userIp = req.ip ?? "";
+
+  console.log("Received a request");
+
+  console.log({ _body, video });
 
   const encryptedIp = await hash(userIp, {
     secret: Buffer.from(process.env.ARGON_SECRET ?? ""),
@@ -24,7 +29,7 @@ export const POST = async (req: NextRequest) => {
     }
   });
 
-  if (userHasExceededLimit && userHasExceededLimit.tries >= 5) {
+  if (userHasExceededLimit && userHasExceededLimit.tries >= 3) {
     return NextResponse.json(
       { message: "Has excedido el límite, utiliza tu clave de OpenAI" },
       { status: 429 }
