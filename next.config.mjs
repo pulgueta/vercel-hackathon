@@ -6,7 +6,7 @@ const nextConfig = {
     }
   },
   experimental: {
-    serverComponentsExternalPackages: ["@node-rs/argon2"]
+    serverComponentsExternalPackages: ["@node-rs/argon2", "@prisma/client"]
   }
 };
 

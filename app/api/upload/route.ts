@@ -4,15 +4,22 @@ import { NextResponse } from "next/server";
 import { hash } from "@node-rs/argon2";
 
 import { db } from "@/db";
+import { uploadSchema } from "@/schemas/upload";
 
 export const POST = async (req: NextRequest) => {
   const _body = await req.json();
-  const video = await req.formData();
   const userIp = req.ip ?? "";
 
-  console.log("Received a request");
+  const body = uploadSchema.safeParse(_body);
 
-  console.log({ _body, video });
+  if (!body.success) {
+    return NextResponse.json(
+      { message: "Error en la validación" },
+      { status: 400 }
+    );
+  }
+
+  console.log({ _body });
 
   const encryptedIp = await hash(userIp, {
     secret: Buffer.from(process.env.ARGON_SECRET ?? ""),
@@ -34,9 +41,23 @@ export const POST = async (req: NextRequest) => {
       { message: "Has excedido el límite, utiliza tu clave de OpenAI" },
       { status: 429 }
     );
+  } else {
+    await db.upload.create({
+      data: {
+        ip: encryptedIp,
+        tries: 1
+      }
+    });
   }
 
-  await db.upload.update({
+  const uploadPromise = db.ad.create({
+    data: {
+      videoSource: body.data.videoUrl,
+      id: body.data.videoId
+    }
+  });
+
+  const resPromise = db.upload.update({
     where: {
       ip: encryptedIp
     },
@@ -46,6 +67,10 @@ export const POST = async (req: NextRequest) => {
       }
     }
   });
+
+  const [upload, res] = await Promise.all([uploadPromise, resPromise]);
+
+  return NextResponse.json({ res }, { status: 200 });
 };
 
 export const GET = async (req: NextRequest) => {
@@ -66,5 +91,5 @@ export const GET = async (req: NextRequest) => {
     }
   });
 
-  return NextResponse.json({ tries: upload?.tries ?? 0 }, { status: 200 });
+  return NextResponse.json({ tries: upload?.tries }, { status: 200 });
 };
