@@ -1,95 +1,67 @@
 import type { NextRequest } from "next/server";
 import { NextResponse } from "next/server";
 
-import { hash } from "@node-rs/argon2";
+import { createOpenAI } from "@ai-sdk/openai";
+import { generateObject } from "ai";
 
 import { db } from "@/db";
-import { uploadSchema } from "@/schemas/upload";
+import { responseSchema } from "@/schemas/upload";
+import { PROMPT } from "@/constants";
 
 export const POST = async (req: NextRequest) => {
-  const _body = await req.json();
-  const userIp = req.ip ?? "";
+  const _body = await req.formData();
 
-  const body = uploadSchema.safeParse(_body);
+  const video = _body.get("file") as File;
+  const influencer = _body.get("influencer");
+  const apiKey = _body.get("apiKey")?.toString();
+  const videoUrl = _body.get("videoUrl")?.toString() as string;
 
-  if (!body.success) {
-    return NextResponse.json(
-      { message: "Error en la validación" },
-      { status: 400 }
-    );
-  }
-
-  console.log({ _body });
-
-  const encryptedIp = await hash(userIp, {
-    secret: Buffer.from(process.env.ARGON_SECRET ?? ""),
-    memoryCost: 19456,
-    timeCost: 2,
-    parallelism: 1
+  const openai = createOpenAI({
+    apiKey: apiKey ?? process.env.OPENAI_API_KEY
   });
 
-  const userHasExceededLimit = await db.upload.findFirst({
-    where: {
-      ip: {
-        equals: encryptedIp
+  const {
+    object: { facebook, instagram, tiktok, twitter, youtube_shorts }
+  } = await generateObject({
+    model: openai("gpt-4-turbo-2024-04-09"),
+    schema: responseSchema,
+    messages: [
+      {
+        role: "system",
+        content: PROMPT
+      },
+      {
+        role: "user",
+        content: `Generate social media metrics for this video ${video} and this influencer ${influencer}`
       }
-    }
+    ]
   });
 
-  if (userHasExceededLimit && userHasExceededLimit.tries >= 3) {
-    return NextResponse.json(
-      { message: "Has excedido el límite, utiliza tu clave de OpenAI" },
-      { status: 429 }
-    );
-  } else {
-    await db.upload.create({
-      data: {
-        ip: encryptedIp,
-        tries: 1
-      }
-    });
-  }
-
-  const uploadPromise = db.ad.create({
+  const data = await db.ad.create({
     data: {
-      videoSource: body.data.videoUrl,
-      id: body.data.videoId
+      facebookComments: facebook.facebookComments,
+      facebookLikes: facebook.facebookLikes,
+      facebookShares: facebook.facebookShares,
+      facebookViews: facebook.facebookViews,
+      instagramComments: instagram.instagramComments,
+      instagramLikes: instagram.instagramLikes,
+      instagramShares: instagram.instagramShares,
+      instagramViews: instagram.instagramViews,
+      tiktokComments: tiktok.tiktokComments,
+      tiktokFavorites: tiktok.tiktokFavorites,
+      tiktokLikes: tiktok.tiktokLikes,
+      tiktokShares: tiktok.tiktokShares,
+      tiktokViews: tiktok.tiktokViews,
+      twitterLikes: twitter.twitterLikes,
+      twitterRetweets: twitter.twitterRetweets,
+      twitterViews: twitter.twitterViews,
+      youtubeComments: youtube_shorts.youtubeShortsComments,
+      youtubeLikes: youtube_shorts.youtubeShortsLikes,
+      youtubeShares: youtube_shorts.youtubeShortsShares,
+      youtubeViews: youtube_shorts.youtubeShortsViews,
+      videoSource: videoUrl
     }
   });
 
-  const resPromise = db.upload.update({
-    where: {
-      ip: encryptedIp
-    },
-    data: {
-      tries: {
-        increment: 1
-      }
-    }
-  });
-
-  const [upload, res] = await Promise.all([uploadPromise, resPromise]);
-
-  return NextResponse.json({ res }, { status: 200 });
-};
-
-export const GET = async (req: NextRequest) => {
-  const userIp = req.ip ?? "";
-
-  const encryptedIp = await hash(userIp, {
-    secret: Buffer.from(process.env.ARGON_SECRET ?? ""),
-    memoryCost: 19456,
-    timeCost: 2,
-    parallelism: 1
-  });
-
-  const upload = await db.upload.findFirst({
-    where: {
-      ip: {
-        equals: encryptedIp
-      }
-    }
-  });
-
-  return NextResponse.json({ tries: upload?.tries }, { status: 200 });
+  return NextResponse.json({ data }, { status: 200 });
 };

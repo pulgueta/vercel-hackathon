@@ -4,7 +4,9 @@ import type { FormEvent } from "react";
 
 import { useRouter } from "next/navigation";
 
-export const OpenAIInput = () => {
+import { STORAGE_KEY } from "@/constants";
+
+export const Input = () => {
   const { refresh } = useRouter();
 
   const onSubmit = (e: FormEvent<HTMLFormElement>) => {
@@ -12,13 +14,13 @@ export const OpenAIInput = () => {
 
     const formData = new FormData(e.currentTarget);
 
-    const openaiKey = formData.get("openaiKey");
+    const googleKey = formData.get(STORAGE_KEY);
 
-    if (!openaiKey) {
+    if (!googleKey) {
       return;
     }
 
-    localStorage.setItem("openaiKey", openaiKey as string);
+    localStorage.setItem(STORAGE_KEY, googleKey as string);
 
     return refresh();
   };
@@ -31,7 +33,7 @@ export const OpenAIInput = () => {
       <input
         placeholder='sk-proj-dfjfgu83...'
         className='flex h-10 w-full max-w-xs rounded-md border bg-neutral-100 px-3 py-2 text-sm file:border-0 file:bg-transparent file:text-sm file:font-medium focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50'
-        name='openaiKey'
+        name={STORAGE_KEY}
       />
       <button className='rounded border border-emerald-500 bg-emerald-600 px-4 py-2 text-sm font-medium tracking-tight text-white'>
         Utilizar mi API Key

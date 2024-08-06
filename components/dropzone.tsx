@@ -1,80 +1,86 @@
 "use client";
 
+import { useDropzone } from "react-dropzone";
 import { toast } from "sonner";
-import type { CloudinaryUploadWidgetInfo } from "next-cloudinary";
-import { CldUploadWidget } from "next-cloudinary";
 
-import { useTries } from "@/hooks/use-tries";
-
-interface UploadData {
-  apiKey: string | null;
-  videoId: string;
-  videoUrl: string;
-}
+import { MAX_FILE_SIZE, STORAGE_KEY } from "@/constants";
+import { uploadToDigitalOcean } from "@/lib/aws/upload";
 
 export const Dropzone = () => {
-  const { disabled } = useTries();
+  const { getInputProps, getRootProps } = useDropzone({
+    maxFiles: 1,
+    multiple: false,
+    accept: {
+      "video/*": [".mp4"]
+    },
+    maxSize: MAX_FILE_SIZE,
+    validator: (f) => {
+      if (!f.type.includes("video")) {
+        return {
+          code: "file-invalid-type",
+          message: "El archivo debe ser un video"
+        };
+      }
 
-  const maxFileSize = 64 * 1024 * 1024;
+      if (f.size > MAX_FILE_SIZE) {
+        return {
+          code: "file-too-large",
+          message: "El archivo es demasiado grande"
+        };
+      }
 
-  const apiKey = localStorage.getItem("apiKey");
+      return null;
+    },
+    onDropRejected: (f) => {
+      toast.error(f[0].errors[1].message);
+    },
+    onError: (err) => {
+      toast.error(err.message);
+    },
+    onDropAccepted: (f) => {
+      toast.promise(
+        async () => {
+          const res = await uploadToDigitalOcean(f[0]);
 
-  const saveToDatabase = async (data: UploadData) => {
-    const r = await fetch("/api/upload", {
-      body: JSON.stringify(data),
-      method: "POST"
-    });
+          console.log(res);
 
-    if (!r.ok) {
-      toast.error("Ha ocurrido un error al subir tu video");
+          if (!res.key || !res.url) {
+            toast.error("Error al subir el video");
+          }
+        },
+        {
+          loading: "Subiendo video...",
+          success: "Video subido correctamente",
+          error: "Error al subir el video"
+        }
+      );
     }
+  });
 
-    return await r.json();
-  };
+  const apiExists = localStorage.getItem(STORAGE_KEY) === null;
 
   return (
-    <div className='w-full'>
-      <CldUploadWidget
-        signatureEndpoint='/api/signature'
-        options={{
-          sources: ["local", "dropbox", "url", "google_drive"],
-          multiple: false,
-          maxFiles: 1,
-          maxFileSize,
-          defaultSource: "local",
-          language: "es"
-        }}
-        onSuccess={async (r, { widget }) => {
-          console.log({ r });
-
-          const info = r.info as CloudinaryUploadWidgetInfo;
-
-          const res = await saveToDatabase({
-            videoId: info.asset_id,
-            videoUrl: info.url,
-            apiKey
-          });
-
-          toast.success("Se ha subido tu video correctamente");
-          widget.close();
-          // push(`${pathname}/result`);
-        }}
-        onError={() => {
-          toast.error("Ha ocurrido un error al subir tu video");
-        }}
-      >
-        {({ open }) => {
-          return (
-            <button
-              className='mx-auto w-full rounded border border-emerald-500 bg-emerald-600 px-4 py-2 text-sm font-medium tracking-tight text-white'
-              onClick={() => open()}
-              disabled={disabled}
-            >
-              Sube tu video
-            </button>
-          );
-        }}
-      </CldUploadWidget>
-    </div>
+    !apiExists && (
+      <div>
+        <h2 className='mb-4 text-center text-xl font-semibold tracking-tight'>
+          Sube tu video con el nombre del influencer. Ejemplo
+          &quot;westcol.mp4&quot;
+        </h2>
+        <div
+          {...getRootProps({
+            className:
+              "mx-auto max-w-lg w-full cursor-pointer rounded-lg border border-dashed border-neutral-300 bg-neutral-400 hover:bg-neutral-200 px-4 py-16 transition md:py-24"
+          })}
+        >
+          <input {...getInputProps()} />
+          <p className='text-center font-normal opacity-50'>
+            Haz clic o arrastra un video aquí
+          </p>
+          <p className='text-center text-sm font-normal opacity-50'>
+            (Máximo 64MB)
+          </p>
+        </div>
+      </div>
+    )
   );
 };

@@ -8,5 +8,10 @@ export const Dropzone = dynamic(
 );
 
 export const Header = dynamic(() => import("./header").then((d) => d.Header), {
+  ssr: false,
+  loading: () => <div>Cargando...</div>
+});
+
+export const Input = dynamic(() => import("./input").then((d) => d.Input), {
   ssr: false
 });
