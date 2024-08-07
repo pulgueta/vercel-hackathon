@@ -37,6 +37,8 @@ export const POST = async (req: NextRequest) => {
     ]
   });
 
+  console.log({ facebook, instagram, tiktok, twitter, youtube_shorts });
+
   const data = await db.ad.create({
     data: {
       facebookComments: facebook.facebookComments,
