@@ -1,5 +1,7 @@
 "use client";
 
+import { useRouter } from "next/navigation";
+
 import { useDropzone } from "react-dropzone";
 import { toast } from "sonner";
 
@@ -7,6 +9,8 @@ import { MAX_FILE_SIZE, STORAGE_KEY } from "@/constants";
 import { uploadToDigitalOcean } from "@/lib/aws/upload";
 
 export const Dropzone = () => {
+  const { push } = useRouter();
+
   const { getInputProps, getRootProps } = useDropzone({
     maxFiles: 1,
     multiple: false,
@@ -42,11 +46,11 @@ export const Dropzone = () => {
         async () => {
           const res = await uploadToDigitalOcean(f[0]);
 
-          console.log(res);
-
           if (!res.key || !res.url) {
             toast.error("Error al subir el video");
           }
+
+          push(`/result?id=${res.id}`);
         },
         {
           loading: "Subiendo video...",

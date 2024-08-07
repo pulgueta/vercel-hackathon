@@ -1,10 +1,8 @@
 export const STORAGE_KEY = "openaiKey";
 
-export const MAX_TRIES = 3;
-
 export const MAX_FILE_SIZE = 64 * 1024 * 1024;
 
-export const BUCKET_NAME = "vercel-hackathon";
+export const BUCKET_NAME = "influencer-ai";
 
 export const REGION = "us-east-1";
 

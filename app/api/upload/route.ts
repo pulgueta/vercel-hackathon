@@ -37,9 +37,7 @@ export const POST = async (req: NextRequest) => {
     ]
   });
 
-  console.log({ facebook, instagram, tiktok, twitter, youtube_shorts });
-
-  const data = await db.ad.create({
+  const { id } = await db.ad.create({
     data: {
       facebookComments: facebook.facebookComments,
       facebookLikes: facebook.facebookLikes,
@@ -65,5 +63,5 @@ export const POST = async (req: NextRequest) => {
     }
   });
 
-  return NextResponse.json({ data }, { status: 200 });
+  return NextResponse.json({ data: id }, { status: 200 });
 };

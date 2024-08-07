@@ -14,13 +14,13 @@ export const Input = () => {
 
     const formData = new FormData(e.currentTarget);
 
-    const googleKey = formData.get(STORAGE_KEY);
+    const openaiKey = formData.get(STORAGE_KEY);
 
-    if (!googleKey) {
+    if (!openaiKey) {
       return;
     }
 
-    localStorage.setItem(STORAGE_KEY, googleKey as string);
+    localStorage.setItem(STORAGE_KEY, openaiKey as string);
 
     return refresh();
   };

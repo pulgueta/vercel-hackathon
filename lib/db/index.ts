@@ -1,5 +1,13 @@
-import { hash } from "@node-rs/argon2";
 import "server-only";
 
 import { db } from "@/db";
-import { MAX_TRIES } from "@/constants";
+
+export const getAd = async (id: string) => {
+  const ad = await db.ad.findUnique({
+    where: {
+      id
+    }
+  });
+
+  return ad;
+};
